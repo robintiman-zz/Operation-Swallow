@@ -1,16 +1,19 @@
-from numpy import genfromtxt
+def loadGloveModel(gloveFile):
+    print("Loading Glove Model")
+    f = open(gloveFile,'r')
+    model = {}
+    for line in f:
+        splitLine = line.split()
+        word = splitLine[0]
+        embedding = [float(val) for val in splitLine[1:]]
+        model[word] = embedding
+    print("Done.",len(model)," words loaded!")
+    return model
 
-def parseFile(file):
-    dataset = genfromtxt(file, delimiter=',')
+def loadTrainingData(trainingFile):
 
-    tempfile = open("voice.csv", 'r').readlines()
-    for i in range(1, dataset.shape[0]):
-        line = tempfile[i]
-        if "female" in line:
-            dataset[i][20] = 1
-        elif "male" in line:
-            dataset[i][20] = 0
-    return dataset
+    return trainingData
 
-dataset = parseFile('voice.csv')
-print(dataset[1])
+trainingData = loadTrainingData('training.txt')
+model = loadGloveModel('glove.txt')
+print(model['hello'])
