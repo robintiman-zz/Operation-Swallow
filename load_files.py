@@ -1,6 +1,7 @@
 import csv
 import sys
 
+#Load glove file
 def load_glove(gloveFile):
     print("Loading Glove Model")
     f = open(gloveFile,'r')
@@ -17,7 +18,8 @@ def load_glove(gloveFile):
     f.close()
     return model
 
-def read_csv(csvfile1):
+#Load csv file
+def load_csv(csvfile1):
     print("Loading csv file")
     csv.field_size_limit(sys.maxsize)
     csvfile2 = open(csvfile1, 'r')

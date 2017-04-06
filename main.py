@@ -1,5 +1,7 @@
 import load_files as lf
+import vectorizer as vectorizer
 
-traincsv = lf.read_csv('train.csv')
-glove = lf.load_glove('glove.840B.300d.txt')
-print(glove['hello'])
+traincsv = lf.load_csv('train.csv')
+glove = lf.load_glove('glove.6B.50d.txt')
+
+train_vec = vectorizer.vectorize(traincsv, glove)
