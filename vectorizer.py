@@ -16,9 +16,16 @@ Return: A vectorized csv_vec matrix where rows are each example and columns are 
 def vectorize(csv_array, glove, dim):
     csv_vec = np.zeros((len(csv_array), len(csv_array[0]) + 2*dim - 2))
     percentage = 0
+    start = time.time()
+    totaltime = 0
     for i in range(1, len(csv_array)):
         if i%int((len(csv_array)/100)) == 0:
-            print("Vectorizing..." + str(percentage) + "% complete")
+            totaltime += (time.time()-start)
+            time_estimate = totaltime/(percentage+1)*(100-percentage)
+            min = int(time_estimate/60)
+            sec = int(time_estimate - min*60)
+            print("Vectorizing..." + str(percentage) + "% complete. Estimated time: " + str(min) + ":" + str(sec))
+            start = time.time()
             percentage += 1
 
         q1 = str.lower(csv_array[i][3])
