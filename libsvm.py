@@ -11,18 +11,29 @@ output: libsvm_data
     where d is the number of dimensions
 """
 def convert_to_libsvm(data):
-    f = open("datalib.txt", 'w')
+    train = open("datalib.txt.train", 'w')
+    test = open("datalib.txt.test", 'w')
+    nbr_samples = len(data)
     print("Converting data to LIBSVM format")
     for row in data:
         label = str(int(row[0]))
-        rowcount = row[1]
-        # if rowcount == 500:
-        print(rowcount)
-        f.write(label + " ")
-        for i in range(4, len(row)):
-            value = row[i]
-            f.write(str(i - 3) + ":" + str(value) + " ")
-        f.write("\n")
-    f.close()
+        rowcount = int(row[1])
+        if rowcount % 500 == 0:
+            print(str(int(rowcount/nbr_samples*100)) + "%")
+        if rowcount > int(0.7*nbr_samples):
+            write_file(label, row, test)
+        else:
+            write_file(label, row, train)
+    train.close()
+    test.close()
+    print("LIBSVM formatted file created as 'datalib.txt.train'")
+
+
+def write_file(label, row, file):
+    file.write(label + " ")
+    for i in range(4, len(row)):
+        value = row[i]
+        file.write(str(i - 3) + ":" + str(value) + " ")
+    file.write("\n")
 
 
