@@ -1,5 +1,6 @@
 import csv
 import sys
+import numpy as np
 
 #Load glove file
 def load_glove(gloveFile):
@@ -21,8 +22,9 @@ def load_glove(gloveFile):
 #Load csv file
 def load_csv(csvfile1):
     print("Loading csv file")
-    csv.field_size_limit(sys.maxsize)
-    csvfile2 = open(csvfile1, 'r')
-    csvfile3 = csv.reader(csvfile2, delimiter=',', quotechar='|')
-    print("Done loading csv")
-    return csvfile3
+    ifile = open(csvfile1, "r")
+    reader = csv.reader(ifile)
+    data = list(reader)
+    print("Done loadint csv file into data list")
+    ifile.close()
+    return data
