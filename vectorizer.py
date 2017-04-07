@@ -18,7 +18,10 @@ def vectorize(csv_array, glove, dim):
     percentage = 0
     start = time.time()
     totaltime = 0
+
     for i in range(1, len(csv_array)):
+
+        # Calculate % complete and estimated time left
         if i%int((len(csv_array)/100)) == 0:
             totaltime += (time.time()-start)
             time_estimate = totaltime/(percentage+1)*(100-percentage)
@@ -28,6 +31,7 @@ def vectorize(csv_array, glove, dim):
             start = time.time()
             percentage += 1
 
+        # Lower case each question
         q1 = str.lower(csv_array[i][3])
         q2 = str.lower(csv_array[i][4])
 
@@ -35,12 +39,15 @@ def vectorize(csv_array, glove, dim):
         #q1 = sp.correct_spelling(q1,q2)[0]
         #q2 = sp.correct_spelling(q1,q2)[1]
 
+        # Regex seperating each word of the questions in a vector
         q1_words = re.findall(r'\p{L}+', q1)
         q2_words = re.findall(r'\p{L}+', q2)
 
+        # Initialize numpy vectors
         q1_vec = np.zeros((1, dim))
         q2_vec = np.zeros((1, dim))
 
+        # Add all vectorized words from glove in each question vector. If wrongly spelled, ignore it
         for word in q1_words:
             try:
                 q1_vec = np.add(q1_vec, glove[word])
@@ -52,9 +59,11 @@ def vectorize(csv_array, glove, dim):
             except KeyError:
                 continue
 
+        # Normalize the vectorized questions
         q1_vec = np.divide(q1_vec, np.linalg.norm(q1_vec))
         q2_vec = np.divide(q2_vec, np.linalg.norm(q2_vec))
 
+        # Put together the whole final matrix
         csv_vec[i][0] = csv_array[i][5]
         csv_vec[i][1] = csv_array[i][0]
         csv_vec[i][2] = csv_array[i][1]
@@ -63,6 +72,5 @@ def vectorize(csv_array, glove, dim):
             csv_vec[i][j+4] = q1_vec[0][j]
         for j in range(0, dim):
             csv_vec[i][j+4+dim] = q2_vec[0][j]
-
 
     return csv_vec
