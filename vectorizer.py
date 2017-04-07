@@ -36,10 +36,10 @@ def vectorize(csv_array, glove, dim):
         q2 = str.lower(csv_array[i][4])
 
         # Correct spelling
-        #q1 = sp.correct_spelling(q1,q2)[0]
-        #q2 = sp.correct_spelling(q1,q2)[1]
+        # q1 = sp.correct_spelling(q1,q2)[0]
+        # q2 = sp.correct_spelling(q1,q2)[1]
 
-        # Regex seperating each word of the questions in a vector
+        # Regex separating each word of the questions in a vector
         q1_words = re.findall(r'\p{L}+', q1)
         q2_words = re.findall(r'\p{L}+', q2)
 

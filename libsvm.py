@@ -13,21 +13,15 @@ output: libsvm_data
 def convert_to_libsvm(data):
     f = open("datalib.txt", 'w')
     print("Converting data to LIBSVM format")
-    rowcount = 0
     for row in data:
+        label = str(int(row[0]))
+        rowcount = row[1]
+        # if rowcount == 500:
         print(rowcount)
-        count = 0
-        if rowcount == 1000:
-            break
-        for value in row:
-            if count == 0:
-                label = str(value)
-                f.write(label + " ")
-            else:
-                f.write(str(count) + ":" + str(value) + " ")
-            count += 1
-        count = 0
-        rowcount += 1
+        f.write(label + " ")
+        for i in range(4, len(row)):
+            value = row[i]
+            f.write(str(i - 3) + ":" + str(value) + " ")
         f.write("\n")
     f.close()
 
