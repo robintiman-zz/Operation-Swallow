@@ -2,7 +2,7 @@ import csv
 import sys
 import numpy as np
 
-#Load glove file
+# Load glove file
 def load_glove(gloveFile):
     print("Loading Glove Model")
     f = open(gloveFile,'r')
@@ -19,12 +19,12 @@ def load_glove(gloveFile):
     f.close()
     return model
 
-#Load csv file
+# Load csv file
 def load_csv(csvfile1):
     print("Loading csv file")
     ifile = open(csvfile1, "r")
     reader = csv.reader(ifile)
     data = list(reader)
-    print("Done loadint csv file into data list")
+    print("Done loading csv file into data list")
     ifile.close()
     return data
