@@ -10,30 +10,37 @@ output: libsvm_data
     [label, 1:value, 2:value, ... d:value]
     where d is the number of dimensions
 """
-def convert_to_libsvm(data):
-    train = open("datalib.txt.train", 'w')
-    test = open("datalib.txt.test", 'w')
-    nbr_samples = len(data)
+def convert_to_libsvm(data, is_train=True):
     print("Converting data to LIBSVM format")
+    if is_train:
+        file = open("datalib.txt.train", 'w')
+        label_index = 0
+        rowcount_index = 1
+    else:
+        file = open("datalib.txt.test", 'w')
+        rowcount_index = 0
+    nbr_samples = len(data)
     for row in data:
-        label = str(int(row[0]))
-        rowcount = int(row[1])
-        if rowcount % 500 == 0:
-            print(str(int(rowcount/nbr_samples*100)) + "%")
-        if rowcount > int(0.7*nbr_samples):
-            write_file(label, row, test)
+        rowcount = int(row[rowcount_index])
+        print("Progress {:2.1%}".format(rowcount/nbr_samples), end="\r") # Works in the terminal. Sadly not in PyCharm
+        if is_train:
+            label = str(int(label_index))
+            write_file(row, file, is_train, label)
         else:
-            write_file(label, row, train)
-    train.close()
-    test.close()
+            write_file(row, file, is_train)
+    file.close()
     print("LIBSVM formatted file created as 'datalib.txt.train'")
 
 
-def write_file(label, row, file):
-    file.write(label + " ")
-    for i in range(4, len(row)):
+def write_file(row, file, is_train, label=""):
+    if is_train:
+        file.write(label + " ")
+        data_index = 4
+    else:
+        data_index = 1
+    for i in range(data_index, len(row)):
         value = row[i]
-        file.write(str(i - 3) + ":" + str(value) + " ")
+        file.write(str(i - data_index + 1) + ":" + str(value) + " ")
     file.write("\n")
 
 
