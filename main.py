@@ -18,22 +18,25 @@ import xgboost as xgb
 # test_vec = np.load("test_vec.npy")
 # libsvm.convert_to_libsvm(train_vec, True)
 # libsvm.convert_to_libsvm(test_vec, False)
+# libsvm.split_to_libsvm(train_vec)
 #
 # read in data
-dtrain = xgb.DMatrix('datalib.txt.train')
-dtest = xgb.DMatrix('datalib.txt.test')
-# specify parameters via map
-param = {'booster': 'dart',
-         'max_depth': 5, 'learning_rate': 0.05,
-         'objective': 'binary:logistic', 'silent': False,
-         'sample_type': 'weighted',
-         'normalize_type': 'forest',
-         'rate_drop': 0.05,
-         'skip_drop': 0.5}
-num_round = 3
-bst = xgb.train(param, dtrain, num_round)
-# make prediction
-# ntree_limit must not be 0
-preds = bst.predict(dtest, ntree_limit=num_round)
-for pred in preds:
-    print(pred)
+# dtrain = xgb.DMatrix('datalib.txt.train')
+# dtest = xgb.DMatrix('datalib.txt.test')
+# # specify parameters via map
+# param = {'booster': 'dart',
+#          'max_depth': 5, 'learning_rate': 0.05,
+#          'objective': 'binary:logistic', 'silent': False,
+#          'sample_type': 'weighted',
+#          'normalize_type': 'forest',
+#          'rate_drop': 0.05,
+#          'skip_drop': 0.5}
+# num_round = 3
+# bst = xgb.train(param, dtrain, num_round)
+# # make prediction
+# # ntree_limit must not be 0
+# preds = bst.predict(dtest, ntree_limit=num_round)
+# for pred in preds:
+#     print(pred)
+
+lf.conv_to_csv("pred.txt")

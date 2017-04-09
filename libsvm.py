@@ -34,6 +34,20 @@ def convert_to_libsvm(data, is_train):
     file.close()
     print("LIBSVM formatted file created as 'datalib.txt.train'")
 
+def split_to_libsvm(data):
+    train = open("datalib.txt.train", 'w')
+    test = open("datalib.txt.test", 'w')
+    nbr_samples = len(data)
+    for row in data:
+        rowcount = int(row[1])
+        print("Progress {:2.1%}".format(rowcount / nbr_samples), end="\r")  # Works in the terminal. Sadly not in PyCharm
+        label = str(int(row[0]))
+        if rowcount >= int(0.6*nbr_samples):
+            write_file(row, train, True, label)
+        else:
+            write_file(row, test, True, label)
+    test.close()
+    train.close()
 
 def write_file(row, file, is_train, label=""):
     if is_train:
