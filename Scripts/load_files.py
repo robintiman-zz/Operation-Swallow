@@ -47,6 +47,7 @@ def conv_to_csv(filename):
         if index == -1:
             index += 1
             continue
+        # This will add a newline to the last line which needs to be removed.
         csv.write(str(index) + "," + score)
         index += 1
     pred.close()

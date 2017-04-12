@@ -1,8 +1,11 @@
+<<<<<<< Updated upstream:vectorizer.py
 import regex as re
 import numpy as np
 import scipy as sp
 import time
 import math
+import numpy as np
+import regex as re
 
 """
 Vectorizing each question of the the csv_array using glove

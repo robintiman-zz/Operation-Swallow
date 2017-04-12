@@ -6,7 +6,7 @@ param: data:
     where d is the number of dimensions
     
     is_train:
-    True is the data is training set, False otherwise
+    True if the data is training set, False otherwise
 
 output: libsvm_data
     A text file formatted according to the LIBSVM format
@@ -34,6 +34,9 @@ def convert_to_libsvm(data, is_train):
     file.close()
     print("LIBSVM formatted file created as 'datalib.txt.train'")
 
+"""
+Splits the training set into two. Useful for tuning parameters
+"""
 def split_to_libsvm(data):
     train = open("datalib.txt.train", 'w')
     test = open("datalib.txt.test", 'w')

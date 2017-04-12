@@ -1,8 +1,4 @@
 import load_files as lf
-import vectorizer as vec
-import libsvm
-import numpy as np
-import xgboost as xgb
 
 # Uncomment this if you're running it for the first time
 # dim = 50

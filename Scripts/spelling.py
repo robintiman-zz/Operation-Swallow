@@ -1,5 +1,4 @@
 import enchant
-from enchant.checker import SpellChecker
 
 def __check_spelling(q1, q2):
     dict = enchant.Dict('en_US')
