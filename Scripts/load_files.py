@@ -15,7 +15,7 @@ def load_glove(gloveFile):
             model[word] = embedding
         except ValueError:
             print(line)
-    print("Done.", len(model), " words loaded!")
+    print("Done.", len(model), "words loaded!")
     f.close()
     return model
 
