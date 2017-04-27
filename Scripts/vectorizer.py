@@ -1,6 +1,6 @@
 import regex as re
 import numpy as np
-import scipy as sp
+import scipy.spatial.distance as sp
 import time
 import math
 import numpy as np
@@ -135,12 +135,12 @@ def get_glove_distance_features(q1_vec, q2_vec):
     if not (np.array_equal(q1_vec, np.zeros((1, 50))) or np.array_equal(q2_vec, np.zeros((1, 50)))):
     #word_mover_dist =
     #normalized_word_mover_dist =
-        cosine_dist = sp.spatial.distance.cosine(q1_vec, q2_vec)
-        manhattan_dist = sp.spatial.distance.cityblock(q1_vec, q2_vec)
+        cosine_dist = sp.cosine(q1_vec, q2_vec)
+        manhattan_dist = sp.cityblock(q1_vec, q2_vec)
     #jaccard_similarity = sp.spatial.distance.jaccard(q1_vec, q2_vec)
-        canberra_dist = sp.spatial.distance.canberra(q1_vec, q2_vec)
-        minkowski_dist = sp.spatial.distance.minkowski(q1_vec, q2_vec, 3)
-        braycurtis_dist = sp.spatial.distance.braycurtis(q1_vec, q2_vec)
+        canberra_dist = sp.canberra(q1_vec, q2_vec)
+        minkowski_dist = sp.minkowski(q1_vec, q2_vec, 3)
+        braycurtis_dist = sp.braycurtis(q1_vec, q2_vec)
     else:
         cosine_dist = 0
         manhattan_dist = 0

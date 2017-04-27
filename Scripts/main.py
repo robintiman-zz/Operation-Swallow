@@ -1,19 +1,22 @@
 import load_files as lf
+import vectorizer as vec
+import numpy as np
+import libsvm as libsvm
 
 # Uncomment this if you're running it for the first time
-# dim = 50
-# traindata = lf.load_csv('train.csv')
-# testdata = lf.load_csv('test.csv')
-# glove = lf.load_glove('glove.6B.' + str(dim) + 'd.txt')
-# train_vec = vec.vectorize(traindata, glove, dim)
-# np.save("train_vec", train_vec)
-# test_vec = vec.vectorize(testdata, glove, dim, is_train=False)
-# np.save("test_vec", test_vec)
+dim = 50
+traindata = lf.load_csv('../train.csv')
+testdata = lf.load_csv('../test.csv')
+glove = lf.load_glove('../glove.6B.' + str(dim) + 'd.txt')
+train_vec = vec.vectorize(traindata, glove, dim, True)
+np.save("train_vec", train_vec)
+test_vec = vec.vectorize(testdata, glove, dim, False)
+np.save("test_vec", test_vec)
 
 # train_vec = np.load("train_vec.npy")
 # test_vec = np.load("test_vec.npy")
-# libsvm.convert_to_libsvm(train_vec, True)
-# libsvm.convert_to_libsvm(test_vec, False)
+libsvm.convert_to_libsvm(train_vec, True)
+libsvm.convert_to_libsvm(test_vec, False)
 # libsvm.split_to_libsvm(train_vec)
 #
 # read in data
@@ -35,4 +38,4 @@ import load_files as lf
 # for pred in preds:
 #     print(pred)
 
-lf.conv_to_csv("pred.txt")
+#lf.conv_to_csv("pred.txt")
