@@ -1,41 +1,32 @@
 import load_files as lf
-import vectorizer as vec
+import vectorize as vec
 import numpy as np
-import libsvm as libsvm
+from libsvm import convert_to_libsvm
+import pandas as pd
 
 # Uncomment this if you're running it for the first time
-dim = 50
-traindata = lf.load_csv('../train.csv')
-testdata = lf.load_csv('../test.csv')
-glove = lf.load_glove('../glove.6B.' + str(dim) + 'd.txt')
-train_vec = vec.vectorize(traindata, glove, dim, True)
-np.save("train_vec", train_vec)
-test_vec = vec.vectorize(testdata, glove, dim, False)
-np.save("test_vec", test_vec)
-
-# train_vec = np.load("train_vec.npy")
-# test_vec = np.load("test_vec.npy")
-libsvm.convert_to_libsvm(train_vec, True)
-libsvm.convert_to_libsvm(test_vec, False)
-# libsvm.split_to_libsvm(train_vec)
+# dim = 50
 #
-# read in data
-# dtrain = xgb.DMatrix('datalib.txt.train')
-# dtest = xgb.DMatrix('datalib.txt.test')
-# # specify parameters via map
-# param = {'booster': 'dart',
-#          'max_depth': 5, 'learning_rate': 0.05,
-#          'objective': 'binary:logistic', 'silent': False,
-#          'sample_type': 'weighted',
-#          'normalize_type': 'forest',
-#          'rate_drop': 0.05,
-#          'skip_drop': 0.5}
-# num_round = 3
-# bst = xgb.train(param, dtrain, num_round)
-# # make prediction
-# # ntree_limit must not be 0
-# preds = bst.predict(dtest, ntree_limit=num_round)
-# for pred in preds:
-#     print(pred)
+# # GloVe
+# glove = lf.load_glove("../Data/glove.6B.50d.txt")
+#
+# # Training set
+# traindata = pd.read_csv('../Data/train.csv')
+# traindata = traindata.replace(np.nan, '', regex=True)
+# train_vector = vec.vectorize(dim, glove, traindata)
+# np.save("train_vector", train_vector)
+#
+# # Test set
+# testdata = pd.read_csv('../Data/test.csv')
+# testdata = testdata.replace(np.nan, '', regex=True)
+# test_vector = vec.vectorize(dim, glove, testdata)
+# np.save("test_vector", test_vector)
+#
+# # Load np files if already vectorized
+# # train_vector = np.load("train_vector.npy")
+# # test_vector = np.load("test_vector.npy")
+# convert_to_libsvm(train_vector, traindata, True)
+# convert_to_libsvm(test_vector, testdata, False)
 
-#lf.conv_to_csv("pred.txt")
+lf.conv_to_csv("../Data/pred.txt")
+

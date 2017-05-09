@@ -19,17 +19,6 @@ def load_glove(gloveFile):
     f.close()
     return model
 
-# Load csv file
-def load_csv(csvfile1):
-    print("Loading csv file")
-    ifile = open(csvfile1, "r")
-    reader = csv.reader(ifile)
-    data = list(reader)
-    print("Done loading csv file into data list")
-    ifile.close()
-    return data
-
-
 """
 Format:
     test_id,is_duplicate
@@ -40,13 +29,10 @@ Format:
 """
 def conv_to_csv(filename):
     pred = open(filename, 'r')
-    csv = open("predictions.csv", 'w')
+    csv = open("../Data/predictions.csv", 'w')
     csv.write("test_id,is_duplicate\n")
-    index = -1
+    index = 0
     for score in pred:
-        if index == -1:
-            index += 1
-            continue
         # This will add a newline to the last line which needs to be removed.
         csv.write(str(index) + "," + score)
         index += 1

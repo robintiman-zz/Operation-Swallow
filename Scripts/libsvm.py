@@ -1,3 +1,6 @@
+import pandas as pd
+import numpy as np
+
 """
 Method for converting an array to the LIBSVM format
 param: data:
@@ -13,21 +16,22 @@ output: libsvm_data
     [label, 1:value, 2:value, ... d:value]
     where d is the number of dimensions
 """
-def convert_to_libsvm(data, is_train):
+def convert_to_libsvm(data, csv, is_train):
     print("Converting data to LIBSVM format")
     if is_train:
-        file = open("datalib.txt.train", 'w')
-        label_index = 0
-        rowcount_index = 1
+        file = open("../Data/datalib.txt.train", 'w')
+        labels = csv.is_duplicate.values
+        id = csv.id.values
     else:
-        file = open("datalib.txt.test", 'w')
-        rowcount_index = 0
+        file = open("../Data/datalib.txt.test", 'w')
+        id = csv.test_id.values
+
     nbr_samples = len(data)
-    for row in data:
-        rowcount = int(row[rowcount_index])
-        print("Progress {:2.1%}".format(rowcount/nbr_samples), end="\r") # Works in the terminal. Sadly not in PyCharm
+    for i in range(0, data.shape[0]):
+        row = data[i, :]
+        print("Progress {:2.1%}".format(i/nbr_samples), end='\r') # Works in the terminal. Sadly not in PyCharm
         if is_train:
-            label = str(int(row[label_index]))
+            label = str(labels[i])
             write_file(row, file, is_train, label)
         else:
             write_file(row, file, is_train)
@@ -55,12 +59,9 @@ def split_to_libsvm(data):
 def write_file(row, file, is_train, label=""):
     if is_train:
         file.write(label + " ")
-        data_index = 4
-    else:
-        data_index = 1
-    for i in range(data_index, len(row)):
+    for i in range(0, len(row)):
         value = row[i]
-        file.write(str(i - data_index + 1) + ":" + str(value) + " ")
+        file.write(str(i + 1) + ":" + str(value) + " ")
     file.write("\n")
 
 

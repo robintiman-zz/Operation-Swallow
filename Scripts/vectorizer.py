@@ -5,6 +5,7 @@ import time
 import math
 import numpy as np
 import regex as re
+import visualization as vis
 
 """
 Vectorizing each question of the the csv_array using glove
@@ -35,7 +36,7 @@ def vectorize(csv_array, glove, dim, is_train):
     for i in range(1, data_range):
 
         # Calculate % complete and estimated time left
-        if i%int((data_range/100)) == 0:
+        if i % int((data_range/100)) == 0:
             totaltime += (time.time()-start)
             time_estimate = totaltime/(percentage+1)*(100-percentage)
             min = int(time_estimate/60)
@@ -49,8 +50,15 @@ def vectorize(csv_array, glove, dim, is_train):
         q2 = str.lower(csv_array[i][q2_index])
 
         # Regex separating each word of the questions in a vector
-        q1_words = re.findall(r'\p{L}+', q1)
-        q2_words = re.findall(r'\p{L}+', q2)
+        q1_words = re.findall("\w+", q1)
+        q2_words = re.findall("\w+", q2)
+
+        # Remove stopwords
+        q1_words = vis.remove_stop(q1_words)
+        q2_words = vis.remove_stop(q2_words)
+
+        # Remove common words
+        q1_words, q2_words, nbr_common = vis.remove_common(q1_words, q2_words)
 
         # Initialize numpy vectors
         q1_vec = np.zeros((1, dim))
@@ -122,22 +130,22 @@ def get_basic_features(q1, q2):
     q2_nbr_words = len(q2_words)
     nbr_common_words = len(list(set(q1_words).intersection(q2_words)))
     #print("q1_length: " + str(q1_length)
-          #+ "\nq2_length: " + str(q2_length)
-          #+ "\nlength_diff: " + str(length_diff)
-          #+ "\nq1_length_no_space: " + str(q1_length_no_space)
-          #+ "\nq2_length_no_space: " + str(q2_length_no_space)
-          #+ "\nq1_nbr_words: " + str(q1_nbr_words)
-          #+ "\nq2_nbr_words: " + str(q2_nbr_words)
-          #+ "\nnbr_common_words: " + str(nbr_common_words))
+    #+ "\nq2_length: " + str(q2_length)
+    #+ "\nlength_diff: " + str(length_diff)
+    #+ "\nq1_length_no_space: " + str(q1_length_no_space)
+    #+ "\nq2_length_no_space: " + str(q2_length_no_space)
+    #+ "\nq1_nbr_words: " + str(q1_nbr_words)
+    #+ "\nq2_nbr_words: " + str(q2_nbr_words)
+    #+ "\nnbr_common_words: " + str(nbr_common_words))
     return q1_length, q2_length, length_diff, q1_length_no_space, q2_length_no_space, q1_nbr_words, q2_nbr_words, nbr_common_words
 
 def get_glove_distance_features(q1_vec, q2_vec):
     if not (np.array_equal(q1_vec, np.zeros((1, 50))) or np.array_equal(q2_vec, np.zeros((1, 50)))):
-    #word_mover_dist =
-    #normalized_word_mover_dist =
+        #word_mover_dist =
+        #normalized_word_mover_dist =
         cosine_dist = sp.cosine(q1_vec, q2_vec)
         manhattan_dist = sp.cityblock(q1_vec, q2_vec)
-    #jaccard_similarity = sp.spatial.distance.jaccard(q1_vec, q2_vec)
+        #jaccard_similarity = sp.spatial.distance.jaccard(q1_vec, q2_vec)
         canberra_dist = sp.canberra(q1_vec, q2_vec)
         minkowski_dist = sp.minkowski(q1_vec, q2_vec, 3)
         braycurtis_dist = sp.braycurtis(q1_vec, q2_vec)
@@ -148,20 +156,20 @@ def get_glove_distance_features(q1_vec, q2_vec):
         minkowski_dist = 0
         braycurtis_dist = 0
 
-    #q1_skew = sp.stats.skew(q1_vec)
-    #q2_skew = sp.stats.skew(q2_vec)
-    #q1_kurtosis = sp.stats.kurtosis(q1_vec)
-    #q2_kurtosis = sp.stats.kurtosis(q2_vec)
+        #q1_skew = sp.stats.skew(q1_vec)
+        #q2_skew = sp.stats.skew(q2_vec)
+        #q1_kurtosis = sp.stats.kurtosis(q1_vec)
+        #q2_kurtosis = sp.stats.kurtosis(q2_vec)
 
-    #print("cosine_dist: " + str(cosine_dist)
-          #+ "\nmanhattan_dist: " + str(manhattan_dist)
-          #+ #"\njaccard_similarity: " + str(jaccard_similarity)
-          #+ "\ncanberra_dist: " + str(canberra_dist)
-          #+ "\nminkowski_dist: " + str(minkowski_dist)
-          #+ "\nbraycurtis_dist: " + str(braycurtis_dist)
-          #+ "\nq1_skew: " + str(q1_skew)
-          #+ "\nq2_skew: " + str(q2_skew)
-          #+ "\nq1_kurtosis: " + str(q1_kurtosis)
-          #+ "\nq2_kurtosis: " + str(q2_kurtosis)
-          #)
+        #print("cosine_dist: " + str(cosine_dist)
+        #+ "\nmanhattan_dist: " + str(manhattan_dist)
+        #+ #"\njaccard_similarity: " + str(jaccard_similarity)
+        #+ "\ncanberra_dist: " + str(canberra_dist)
+        #+ "\nminkowski_dist: " + str(minkowski_dist)
+        #+ "\nbraycurtis_dist: " + str(braycurtis_dist)
+        #+ "\nq1_skew: " + str(q1_skew)
+        #+ "\nq2_skew: " + str(q2_skew)
+        #+ "\nq1_kurtosis: " + str(q1_kurtosis)
+        #+ "\nq2_kurtosis: " + str(q2_kurtosis)
+        #)
     return cosine_dist, manhattan_dist, canberra_dist, minkowski_dist, braycurtis_dist

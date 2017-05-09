@@ -100,7 +100,7 @@ def common_words(title, save_title, with_spelling, remove_stopwords):
 
 
 def str_to_array(str):
-    return re.findall("\w+'?\w*", str.lower())
+    return re.findall("\w+", str.lower())
 
 
 def remove_stop(q):
@@ -108,12 +108,22 @@ def remove_stop(q):
     result = [word for word in q if word not in stop]
     return result
 
+"""
+Removes common words and returns the resulting arryas along with the number of common words. 
+"""
+def remove_common(q1, q2):
+    common = list((mset(q1) & mset(q2)).elements())
+    q1 = [word for word in q1 if word not in common]
+    q2 = [word for word in q2 if word not in common]
+    return q1, q2, len(common)
+
 def vector_distance(title, save_title, glove, metric='euclidean'):
     same = np.zeros((nbr_duplicates, 1))
     diff = np.zeros((nbr_nonduplicates, 1))
     same_index = 0
     diff_index = 0
-
+    not_in_glove = 0
+    in_glove = 0
     for i in range(0, len(q1_arr)):
         if i % 1000 == 0:
             print('{0:.2f}% finished'.format(i/len(q1_arr)*100))
@@ -122,9 +132,7 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
         q2 = str_to_array(q2_arr[i])
 
         # Remove common words
-        common = list((mset(q1) & mset(q2)).elements())
-        q1 = [word for word in q1 if word not in common]
-        q2 = [word for word in q2 if word not in common]
+        q1, q2 = remove_common(q1, q2)
 
         q1 = remove_stop(q1)
         q2 = remove_stop(q2)
@@ -135,12 +143,18 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
         for word in q1:
             try:
                 q1_vec = np.add(q1_vec, glove[word])
+                in_glove += 1
             except KeyError:
+                # print("{0} in {1}\nOther sentence: {2}".format(word, q1_arr[i], q2_arr[i]))
+                not_in_glove += 1
                 continue
         for word in q2:
             try:
                 q2_vec = np.add(q2_vec, glove[word])
+                in_glove += 1
             except KeyError:
+                # print("{0} in {1}\nOther sentence: {2}".format(word, q2_arr[i], q1_arr[i]))
+                not_in_glove += 1
                 continue
 
         # Normalize the vectorized questions
@@ -150,16 +164,19 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
             q1_vec = np.divide(q1_vec, q1_norm)
             q2_vec = np.divide(q2_vec, q2_norm)
 
+        dist = sp.spatial.distance.cdist(q1_vec, q2_vec, metric)
+        if np.isnan(dist):
+            continue
         if labels[i] == 1:
-            same[same_index, 0] = sp.spatial.distance.cdist(q1_vec, q2_vec, metric)
+            same[same_index, 0] = dist
             same_index += 1
         else:
-            diff[diff_index, 0] = sp.spatial.distance.cdist(q1_vec, q2_vec, metric)
+            diff[diff_index, 0] = dist
             diff_index += 1
-
+    print(in_glove, not_in_glove)
     np.save("vec_dist_same", same)
     np.save("vec_dist_diff", diff)
-    bins = np.linspace(0, 20, 70)
+    bins = np.linspace(0, 3, 100)
     plt.title(title)
     plt.hist(same, bins, alpha=0.5, label="is_duplicate=1")
     plt.hist(diff, bins, alpha=0.5, label="is_duplicate=0")
@@ -167,19 +184,21 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
     plt.savefig('../Visualization/' + save_title)
     plt.show()
 
+
+
 # common_words("Common words with stopwords", False, False)
 # common_words("Common words without stopwords", "cmn_words_with_stop", False, True)
 
-# glove = load_glove("../Data/glove.6B.50d.txt")
-# np.save("../Data/glove50d", glove)
-glove = np.load("../Data/glove50d.npy").item()
-# vector_distance("Vector distance", "vec_dist", glove, 'cosine')
-same = np.load("vec_dist_same.npy")
-diff = np.load("vec_dist_diff.npy")
-bins = np.linspace(0, 20, 70)
-plt.title("Vec diff")
-plt.hist(same, bins, alpha=0.5, label="is_duplicate=1")
-plt.hist(diff, bins, alpha=0.5, label="is_duplicate=0")
-plt.legend(loc='upper right')
-plt.savefig('../Visualization/vec_dist')
-plt.show()
+glove = load_glove("../Data/glove.6B.50d.txt")
+np.save("../Data/glove50d", glove)
+# glove = np.load("../Data/glove50d.npy").item()
+vector_distance("Vector distance", "vec_dist", glove, 'euclidean')
+# same = np.load("vec_dist_same.npy")
+# diff = np.load("vec_dist_diff.npy")
+# bins = np.linspace(0, 3, 100)
+# plt.title("Vec diff")
+# plt.hist(same, bins, alpha=0.5, label="is_duplicate=1")
+# plt.hist(diff, bins, alpha=0.5, label="is_duplicate=0")
+# plt.legend(loc='upper right')
+# plt.savefig('../Visualization/vec_dist')
+# plt.show()
