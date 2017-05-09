@@ -18,7 +18,7 @@ def vectorize(dim, glove, data):
     percentage = 0
     nbr_features = 15
     start = time.time()
-    vectorized_words = np.zeros((len(q1_arr), nbr_features))
+    vectorized_words = np.zeros((len(q1_arr), dim * 2 + nbr_features))
     for i in range(0, len(q1_arr)):
         q1_vec = np.zeros((1, dim))
         q2_vec = np.zeros((1, dim))
@@ -80,10 +80,16 @@ def vectorize(dim, glove, data):
         features[0, 14] = cdist(q1_vec, q2_vec, 'braycurtis')
 
         # Normalize the vectorized questions
-        norm = np.linalg.norm(np.transpose(features), np.inf)
-        features = np.divide(features, norm)
+        features_norm = np.linalg.norm(np.transpose(features), np.inf)
+        q1_norm = np.linalg.norm(np.transpose(features), np.inf)
+        q2_norm = np.linalg.norm(np.transpose(features), np.inf)
+        features = np.divide(features, features_norm)
+        q1_vec = np.divide(q1_vec, q1_norm)
+        q2_vec = np.divide(q2_vec, q2_norm)
 
-        vectorized_words[i, :] = features
+        vectorized_words[i, :dim] = q1_vec
+        vectorized_words[i, dim:dim*2] = q2_vec
+        vectorized_words[i, dim*2:] = features
 
     return vectorized_words
 
@@ -101,6 +107,4 @@ Returns the number of words not in common
 """
 def get_common(q1, q2):
     common = list((mset(q1) & mset(q2)).elements())
-    q1_comm = [word for word in q1 if word not in common]
-    q2_comm = [word for word in q2 if word not in common]
-    return len(q1_comm) + len(q2_comm)
+    return len(common)
