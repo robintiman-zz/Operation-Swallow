@@ -1,30 +1,38 @@
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
 from keras.layers import *
+import pandas as pd
 
 #Load the vectorized question pairs from train and test
-train = np.load("train_vector.npy")
-test = np.load("test_vector.npy")
+print('Loading training and test data...')
+train = np.load("../Data/train_vector.npy")
+test = np.load("../Data/test_vector.npy")
+trainlabels = pd.read_csv('../Data/train.csv')
+trainlabels = trainlabels.replace(np.nan, 0, regex=True)
 
 #Separate the vectorized sets into x as features and y as labels
-x_train = train[:, 4:]
-y_train = train[:, 0]
-x_test = test[1:, 1:]
-#y_test = train[:, 4:]
+x_train = train[:, :]
+y_train = trainlabels.is_duplicate.values
+x_test = test[:, :]
+
+#Convert nan values to 0
+print('Converting nan values to 0...')
+x_train = np.nan_to_num(x_train)
+y_train = np.nan_to_num(y_train)
+x_test = np.nan_to_num(x_test)
 
 #Initializing hyperparameters
 n_features = len(x_train[0])
-epochs = 500
+epochs = 300
 batch_size = 200
-shuffle=True
-dropout_rate = 0.2 #Helps preventing overfitting
+shuffle = True
+dropout_rate = 0.5 #Helps preventing overfitting
 
 #Create neural network model
 model = Sequential()
-model.add(Dense(n_features, input_dim=n_features, activation='softplus'))
+model.add(Dense(n_features, input_dim=n_features, activation='relu'))
 model.add(Dropout(dropout_rate))
-model.add(Dense(n_features, activation='softplus'))
+model.add(Dense(n_features, activation='relu'))
 model.add(Dropout(dropout_rate))
 model.add(Dense(1, activation='sigmoid'))
 
