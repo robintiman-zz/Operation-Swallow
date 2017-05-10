@@ -24,25 +24,22 @@ x_test = np.nan_to_num(x_test)
 
 #Initializing hyperparameters
 n_features = len(x_train[0])
-epochs = 30
+epochs = 40
 batch_size = 1000
 dropout_rate = 0.25 #Helps preventing overfitting
 n_neurons = 2000
-n_hidden_layers = 3
+n_hidden_layers = 2
 shuffle = True
 
 #Create neural network model
 model = Sequential()
-#First layer
 model.add(Dense(n_neurons, input_dim=n_features, activation='relu'))
 model.add(Dropout(dropout_rate))
-#Hidden layers
-for i in range(1, n_hidden_layers + 1):
+for i in range(1, n_hidden_layers):
     #Number of neurons decrease evenly with each layer
     new_n_neurons = int(n_neurons*((n_hidden_layers-i)/n_hidden_layers))
     model.add(Dense(new_n_neurons, activation='relu'))
     model.add(Dropout(dropout_rate))
-#Final layer with 1 neuron indicating 0 or 1
 model.add(Dense(1, activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
