@@ -15,10 +15,10 @@ x_test = test[1:, 1:]
 
 #Initializing hyperparameters
 n_features = len(x_train[0])
-epochs = 1000
-batch_size = 70
+epochs = 500
+batch_size = 200
 shuffle=True
-dropout_rate = 0 #Helps preventing overfitting
+dropout_rate = 0.2 #Helps preventing overfitting
 
 #Create neural network model
 model = Sequential()
@@ -28,7 +28,7 @@ model.add(Dense(n_features, activation='softplus'))
 model.add(Dropout(dropout_rate))
 model.add(Dense(1, activation='sigmoid'))
 
-model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+model.compile(loss='mean_squared_logarithmic_error', optimizer='Adam', metrics=['accuracy'])
 
 #Train the model
 model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1)
