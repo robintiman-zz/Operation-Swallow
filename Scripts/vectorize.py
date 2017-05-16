@@ -9,7 +9,7 @@ from scipy.spatial.distance import cdist
 """
 New vectorizer for usage with stop words removal. 
 """
-def vectorize(dim, glove, data):
+def vectorize(dim, glove, data, is_train):
     q1_arr = data.question1.values
     q2_arr = data.question2.values
 
@@ -22,7 +22,7 @@ def vectorize(dim, glove, data):
     for i in range(0, len(q1_arr)):
         q1_vec = np.zeros((1, dim))
         q2_vec = np.zeros((1, dim))
-        features = np.zeros((1, nbr_features))
+        features = np.zeros((nbr_features))
 
         # Calculate % complete and estimated time left
         if i % int((nbr_samples / 100)) == 0:
@@ -42,17 +42,17 @@ def vectorize(dim, glove, data):
         q2_words = re.findall("\w+", q2)
 
         # Length with and without spaces
-        features[0, 0] = abs(len(q1) - len(q2))
-        features[0, 1] = abs(len(q1.replace(" ", "")) - len(q2.replace(" ", "")))
+        features[0] = abs(len(q1) - len(q2))
+        features[1] = abs(len(q1.replace(" ", "")) - len(q2.replace(" ", "")))
 
         # Remove stopwords
         q1_words, q2_words = remove_stop(q1_words, q2_words)
 
         # Length without stopwords
-        features[0, 2] = abs(sum([len(word) for word in q1_words]) - sum([len(word) for word in q2_words]))
+        features[2] = abs(sum([len(word) for word in q1_words]) - sum([len(word) for word in q2_words]))
 
         # Common words
-        features[0, 3] = get_common(q1_words, q2_words)
+        features[3] = get_common(q1_words, q2_words)
 
         # GloVe features
         for word in q1_words:
@@ -67,31 +67,28 @@ def vectorize(dim, glove, data):
                 continue
 
         # Distance features
-        features[0, 4] = cdist(q1_vec, q2_vec, 'euclidean')
-        features[0, 5] = cdist(q1_vec, q2_vec, 'cityblock')
-        features[0, 6] = cdist(q1_vec, q2_vec, 'cosine')
-        features[0, 7] = cdist(q1_vec, q2_vec, 'correlation')
-        features[0, 8] = cdist(q1_vec, q2_vec, 'jaccard')
-        features[0, 9] = cdist(q1_vec, q2_vec, 'chebyshev')
-        features[0, 10] = cdist(q1_vec, q2_vec, 'seuclidean', V=None)
-        features[0, 11] = cdist(q1_vec, q2_vec, 'sqeuclidean')
-        features[0, 12] = cdist(q1_vec, q2_vec, 'hamming')
-        features[0, 13] = cdist(q1_vec, q2_vec, 'canberra')
-        features[0, 14] = cdist(q1_vec, q2_vec, 'braycurtis')
-
-        # Normalize the vectorized questions
-        features_norm = np.linalg.norm(np.transpose(features), np.inf)
-        q1_norm = np.linalg.norm(np.transpose(features), np.inf)
-        q2_norm = np.linalg.norm(np.transpose(features), np.inf)
-        features = np.divide(features, features_norm)
-        q1_vec = np.divide(q1_vec, q1_norm)
-        q2_vec = np.divide(q2_vec, q2_norm)
+        features[4] = cdist(q1_vec, q2_vec, 'euclidean')
+        features[5] = cdist(q1_vec, q2_vec, 'cityblock')
+        features[6] = cdist(q1_vec, q2_vec, 'cosine')
+        features[7] = cdist(q1_vec, q2_vec, 'correlation')
+        features[8] = cdist(q1_vec, q2_vec, 'jaccard')
+        features[9] = cdist(q1_vec, q2_vec, 'chebyshev')
+        features[10] = cdist(q1_vec, q2_vec, 'seuclidean', V=None)
+        features[11] = cdist(q1_vec, q2_vec, 'sqeuclidean')
+        features[12] = cdist(q1_vec, q2_vec, 'hamming')
+        features[13] = cdist(q1_vec, q2_vec, 'canberra')
+        features[14] = cdist(q1_vec, q2_vec, 'braycurtis')
 
         vectorized_words[i, :dim] = q1_vec
         vectorized_words[i, dim:dim*2] = q2_vec
         vectorized_words[i, dim*2:] = features
 
-    return vectorized_words
+    print("Writing to file...")
+    if is_train:
+        np.save("../Data/train_vector", vectorized_words)
+    else:
+        np.save("../Data/test_vector", vectorized_words)
+    print("Done!")
 
 """
 Removes stop words
