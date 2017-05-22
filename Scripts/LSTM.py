@@ -6,110 +6,111 @@ import numpy as np
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
-from keras.layers import Dense, Input, Flatten
+from keras.layers import Dense, Input, Flatten, Merge
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 
-"""
-When a word is not present in GloVe, we hash it instead
-"""
-def hash_word(word, dim):
-    hashed_word = np.zeros((1, dim))
-    h = sum(bytearray(word,'utf8'))/10000
-    for i in range(0, dim):
-        f = lambda x: 1 - 1/(math.exp(2*(x/dim + h)) + 1)
-        hashed_word[0, i] = f(i)
-    return hashed_word
 
-# fix random seed for reproducibility
-np.random.seed(7)
+def tokenize(values):
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(values)
+    sequences = tokenizer.texts_to_sequences(values)
+    word_index = tokenizer.word_index
+    print('Found %s unique tokens.' % len(word_index))
+    data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
+    print('Shape of data tensor:', data.shape)
+    return data, word_index
+
+def load_embedding(load_from_file=True):
+    if not load_from_file:
+        embeddings_index = {}
+        f = open(GLOVE_DIR)
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        np.save('../Data/embedding', embeddings_index)
+        f.close()
+    else:
+        embeddings_index = np.load("../Data/embedding.npy").item()
+    return embeddings_index
+
+
+def build_embedding_matrix(word_index):
+    # prepare embedding matrix
+    num_words = min(MAX_NB_WORDS, len(word_index))
+    print(len(word_index))
+    embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
+    for word, i in word_index.items():
+        if i < 0:
+            print("ksjgs")
+        if i >= MAX_NB_WORDS:
+            continue
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            embedding_matrix[i - 1] = embedding_vector
+    return embedding_matrix, num_words
 
 GLOVE_DIR = '../Data/glove.6B.50d.txt'
-TEXT_DATA_DIR = '../Data/train.csv'
+DATA_DIR = '../Data/train.csv'
 MAX_SEQUENCE_LENGTH = 120
-MAX_NB_WORDS = 20000
+MAX_NB_WORDS = 100000
 EMBEDDING_DIM = 50
 VALIDATION_SPLIT = 0.2
 
 print('Indexing word vectors.')
-
-embeddings_index = {}
-f = open(GLOVE_DIR)
-for line in f:
-    values = line.split()
-    word = values[0]
-    coefs = np.asarray(values[1:], dtype='float32')
-    embeddings_index[word] = coefs
-f.close()
-
+embeddings_index = load_embedding(False)
 print('Found %s word vectors.' % len(embeddings_index))
 
-print('Reading data')
+print('Reading data.')
 dataset = pd.read_csv('../Data/train.csv', dtype=str)
 labels = dataset.is_duplicate.values
-question_list = []
-for i in range(0, len(labels)):
-    q1 = dataset.question1.values[i]
-    q2 = dataset.question2.values[i]
-    question_list.append(str(q1)+ " " + str(q2))
 
 # finally, vectorize the text samples into a 2D integer tensor
-tokenizer = Tokenizer()
-tokenizer.fit_on_texts(question_list)
-sequences = tokenizer.texts_to_sequences(question_list)
-
-word_index = tokenizer.word_index
-print('Found %s unique tokens.' % len(word_index))
-
-data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
-
-labels = to_categorical(labels)
-print('Shape of data tensor:', data.shape)
+q1_data, word_index1 = tokenize([str(word) for word in dataset.question1.values])
+q2_data, word_index2 = tokenize([str(word) for word in dataset.question2.values])
 print('Shape of label tensor:', labels.shape)
 
 # split the data into a training set and a validation set
-indices = np.arange(data.shape[0])
+print("Splitting data into a training set and a validation set.")
+indices = np.arange(q1_data.shape[0]) # q1_data and q2_data should be the same length
 np.random.shuffle(indices)
-data = data[indices]
+q1_data = q1_data[indices]
+q2_data = q2_data[indices]
 labels = labels[indices]
-num_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
+num_validation_samples = int(VALIDATION_SPLIT * q1_data.shape[0])
 
-x_train = data[:-num_validation_samples]
+x_train1 = q1_data[:-num_validation_samples]
+x_train2 = q2_data[:-num_validation_samples]
 y_train = labels[:-num_validation_samples]
-x_val = data[-num_validation_samples:]
+x_val1 = q1_data[-num_validation_samples:]
+x_val2 = q2_data[-num_validation_samples:]
 y_val = labels[-num_validation_samples:]
 
-print('Preparing embedding matrix.')
+print('Preparing embedding matrices.')
+embedding_matrix1, num_words1 = build_embedding_matrix(word_index1) # load pre-trained word embeddings into an Embedding layer
+embedding_matrix2, num_words2 = build_embedding_matrix(word_index2)
 
-# prepare embedding matrix
-num_words = min(MAX_NB_WORDS, len(word_index))
-embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
-for word, i in word_index.items():
-    if i >= MAX_NB_WORDS:
-        continue
-    embedding_vector = embeddings_index.get(word)
-    if embedding_vector is not None:
-        embedding_matrix[i] = embedding_vector
-    else:
-        embedding_matrix[i] = hash_word(word, EMBEDDING_DIM)
-
-# load pre-trained word embeddings into an Embedding layer
+print(x_train1.shape)
 # note that we set trainable = False so as to keep the embeddings fixed
-embedding_layer = Embedding(num_words,
-                            EMBEDDING_DIM,
-                            weights=[embedding_matrix],
-                            input_length=MAX_SEQUENCE_LENGTH,
-                            trainable=False)
-sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
-embedded_sequences = embedding_layer(sequence_input)
+branch1 = Sequential()
+branch1.add(Embedding(num_words1, EMBEDDING_DIM, weights=[embedding_matrix1],
+                      input_length=MAX_SEQUENCE_LENGTH, trainable=False, input_shape=(MAX_SEQUENCE_LENGTH, )))
+branch1.add(LSTM(EMBEDDING_DIM))
+
+branch2 = Sequential()
+branch2.add(Embedding(num_words2, EMBEDDING_DIM, weights=[embedding_matrix2],
+                      input_length=MAX_SEQUENCE_LENGTH, trainable=False, input_shape=(MAX_SEQUENCE_LENGTH, )))
+branch2.add(LSTM(EMBEDDING_DIM))
+
 model = Sequential()
-model.add(embedding_layer)
-model.add(Conv1D(filters=32, kernel_size=3, padding='same', activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
-model.add(LSTM(100))
+model.add(Merge([branch1, branch2], mode='concat'))
+# model.add(LSTM(EMBEDDING_DIM, recurrent_activation='relu', recurrent_dropout=0.1))
 model.add(Dense(1, activation='sigmoid'))
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 print(model.summary())
-model.fit(x_train, y_train, epochs=10, batch_size=64, validation_data=(x_val, y_val))
+
+model.fit([x_train1, x_train2], y_train, epochs=10, batch_size=128, validation_data=([x_val1, x_val2], y_val))
 
 model_json = model.to_json()
 with open("../Data/LSTM.json", "w") as json_file:
