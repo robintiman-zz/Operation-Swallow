@@ -1,10 +1,11 @@
-import numpy as np
 import time
-from load_files import load_glove
 from collections import Counter as mset
 import regex as re
-from nltk.corpus import stopwords
 from scipy.spatial.distance import cdist
+import numpy as np
+from nltk.corpus import stopwords
+import math
+
 
 """
 New vectorizer for usage with stop words removal. 
@@ -16,13 +17,12 @@ def vectorize(dim, glove, data, is_train):
     nbr_samples = len(q1_arr)
     totaltime = 0
     percentage = 0
-    nbr_features = 15
     start = time.time()
-    vectorized_words = np.zeros((len(q1_arr), dim * 2 + nbr_features))
+    vectorized_words = np.zeros((len(q1_arr), dim * 2))
+    not_in_glove = []
     for i in range(0, len(q1_arr)):
         q1_vec = np.zeros((1, dim))
         q2_vec = np.zeros((1, dim))
-        features = np.zeros((nbr_features))
 
         # Calculate % complete and estimated time left
         if i % int((nbr_samples / 100)) == 0:
@@ -30,7 +30,7 @@ def vectorize(dim, glove, data, is_train):
             time_estimate = totaltime / (percentage + 1) * (100 - percentage)
             min = int(time_estimate / 60)
             sec = int(time_estimate - min * 60)
-            print("Vectorizing...{0}% complete. Estimated time: {1}:{2}".format(str(percentage), str(min), str(sec), end='\r'))
+            print("Vectorizing...{0}% complete. Estimated time: {1}:{2}".format(percentage, min, sec, end='\r'))
             start = time.time()
             percentage += 1
 
@@ -41,47 +41,25 @@ def vectorize(dim, glove, data, is_train):
         q1_words = re.findall("\w+", q1)
         q2_words = re.findall("\w+", q2)
 
-        # Length with and without spaces
-        features[0] = abs(len(q1) - len(q2))
-        features[1] = abs(len(q1.replace(" ", "")) - len(q2.replace(" ", "")))
-
         # Remove stopwords
         q1_words, q2_words = remove_stop(q1_words, q2_words)
 
-        # Length without stopwords
-        features[2] = abs(sum([len(word) for word in q1_words]) - sum([len(word) for word in q2_words]))
-
-        # Common words
-        features[3] = get_common(q1_words, q2_words)
-
-        # GloVe features
-        for word in q1_words:
-            try:
-                q1_vec = np.add(q1_vec, glove[word])
-            except KeyError:
-                continue
-        for word in q2_words:
-            try:
-                q2_vec = np.add(q2_vec, glove[word])
-            except KeyError:
-                continue
-
-        # Distance features
-        features[4] = cdist(q1_vec, q2_vec, 'euclidean')
-        features[5] = cdist(q1_vec, q2_vec, 'cityblock')
-        features[6] = cdist(q1_vec, q2_vec, 'cosine')
-        features[7] = cdist(q1_vec, q2_vec, 'correlation')
-        features[8] = cdist(q1_vec, q2_vec, 'jaccard')
-        features[9] = cdist(q1_vec, q2_vec, 'chebyshev')
-        features[10] = cdist(q1_vec, q2_vec, 'seuclidean', V=None)
-        features[11] = cdist(q1_vec, q2_vec, 'sqeuclidean')
-        features[12] = cdist(q1_vec, q2_vec, 'hamming')
-        features[13] = cdist(q1_vec, q2_vec, 'canberra')
-        features[14] = cdist(q1_vec, q2_vec, 'braycurtis')
+        for i in range(0, max(len(q1_words), len(q2_words))):
+            if i < len(q1_words):
+                word1 = q1_words[i]
+                try:
+                    q1_vec = np.add(q1_vec, glove[word1])
+                except KeyError:
+                    q1_vec = np.add(q1_vec, hash_word(word1, dim))
+            if i < len(q2_words):
+                word2 = q2_words[i]
+                try:
+                    q2_vec = np.add(q2_vec, glove[word2])
+                except KeyError:
+                    q2_vec = np.add(q2_vec, hash_word(word2, dim))
 
         vectorized_words[i, :dim] = q1_vec
-        vectorized_words[i, dim:dim*2] = q2_vec
-        vectorized_words[i, dim*2:] = features
+        vectorized_words[i, dim:] = q2_vec
 
     print("Writing to file...")
     if is_train:
@@ -100,8 +78,12 @@ def remove_stop(q1, q2):
     return q1_stop, q2_stop
 
 """
-Returns the number of words not in common
+When a word is not present in GloVe, we hash it instead
 """
-def get_common(q1, q2):
-    common = list((mset(q1) & mset(q2)).elements())
-    return len(common)
+def hash_word(word, dim):
+    hashed_word = np.zeros((1, dim))
+    h = sum(bytearray(word,'utf8'))/10000
+    for i in range(0, dim):
+        f = lambda x: 1 - 1/(math.exp(2*(x/dim + h)) + 1)
+        hashed_word[0, i] = f(i)
+    return hashed_word

@@ -5,7 +5,6 @@ import re
 from collections import Counter as mset
 from nltk.corpus import stopwords
 import scipy as sp
-from load_files import load_glove
 
 # Load data from csv files
 traindata = pd.read_csv('../Data/train.csv')
@@ -124,15 +123,13 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
     diff_index = 0
     not_in_glove = 0
     in_glove = 0
+    words_not_found = []
     for i in range(0, len(q1_arr)):
         if i % 1000 == 0:
             print('{0:.2f}% finished'.format(i/len(q1_arr)*100))
 
         q1 = str_to_array(q1_arr[i])
         q2 = str_to_array(q2_arr[i])
-
-        # Remove common words
-        q1, q2 = remove_common(q1, q2)
 
         q1 = remove_stop(q1)
         q2 = remove_stop(q2)
@@ -145,6 +142,7 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
                 q1_vec = np.add(q1_vec, glove[word])
                 in_glove += 1
             except KeyError:
+                words_not_found.append(word)
                 # print("{0} in {1}\nOther sentence: {2}".format(word, q1_arr[i], q2_arr[i]))
                 not_in_glove += 1
                 continue
@@ -154,12 +152,13 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
                 in_glove += 1
             except KeyError:
                 # print("{0} in {1}\nOther sentence: {2}".format(word, q2_arr[i], q1_arr[i]))
+                words_not_found.append(word)
                 not_in_glove += 1
                 continue
 
         # Normalize the vectorized questions
-        q1_norm = np.linalg.norm(q1_vec)
-        q2_norm = np.linalg.norm(q2_vec)
+        q1_norm = np.linalg.norm(np.transpose(q1_vec), np.inf)
+        q2_norm = np.linalg.norm(np.transpose(q2_vec), np.inf)
         if q1_norm > 0 and q2_norm > 0:
             q1_vec = np.divide(q1_vec, q1_norm)
             q2_vec = np.divide(q2_vec, q2_norm)
@@ -173,10 +172,9 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
         else:
             diff[diff_index, 0] = dist
             diff_index += 1
-    print(in_glove, not_in_glove)
-    np.save("vec_dist_same", same)
-    np.save("vec_dist_diff", diff)
-    bins = np.linspace(0, 3, 100)
+    np.save("../Data/vec_dist_same", same)
+    np.save("../Data/vec_dist_diff", diff)
+    bins = np.linspace(0, 4, 100)
     plt.title(title)
     plt.hist(same, bins, alpha=0.5, label="is_duplicate=1")
     plt.hist(diff, bins, alpha=0.5, label="is_duplicate=0")
@@ -184,21 +182,70 @@ def vector_distance(title, save_title, glove, metric='euclidean'):
     plt.savefig('../Visualization/' + save_title)
     plt.show()
 
+def not_found_in_glove(glove, title, save_title):
+    # words = np.load("../Data/not_found.npy")
+    same = np.zeros((nbr_duplicates, 2))
+    diff = np.zeros((nbr_nonduplicates, 2))
+    not_in_glove1 = 0
+    not_in_glove2 = 0
+    same_index = 0
+    diff_index = 0
+    for i in range(0, len(q1_arr)):
+        if i % 1000 == 0:
+            print('{0:.2f}% finished'.format(i/len(q1_arr)*100))
+
+        q1 = str_to_array(q1_arr[i])
+        q2 = str_to_array(q2_arr[i])
+
+        q1 = remove_stop(q1)
+        q2 = remove_stop(q2)
+
+        for word in q1:
+            try:
+                glove[word]
+            except KeyError:
+                # print("{0} in {1}\nOther sentence: {2}".format(word, q1_arr[i], q2_arr[i]))
+                not_in_glove1 += 1
+                continue
+        for word in q2:
+            try:
+                glove[word]
+            except KeyError:
+                # print("{0} in {1}\nOther sentence: {2}".format(word, q2_arr[i], q1_arr[i]))
+                not_in_glove2 += 1
+                continue
+
+        q1_ratio = not_in_glove1/len(q1) if len(q1) > 0 else 0
+        q2_ratio = not_in_glove2/len(q2) if len(q2) > 0 else 0
+        if labels[i] == 1:
+            # Duplicate
+            same[same_index, 0] = q1_ratio
+            same[same_index, 1] = q2_ratio
+            same_index += 1
+        else:
+            diff[diff_index, 0] = q1_ratio
+            diff[diff_index, 1] = q2_ratio
+            diff_index += 1
+
+        not_in_glove1 = 0
+        not_in_glove2 = 0
+
+    np.save("same_" + save_title, same)
+    np.save("diff_" + save_title, diff)
+    bins = np.linspace(0, 1, 100)
+    plt.title(title)
+    plt.hist(same[:, 0], bins, alpha=0.5, label="Q1. Duplicate")
+    plt.hist(same[:, 1], bins, alpha=0.5, label="Q2. Duplicate")
+    plt.hist(diff[:, 0], bins, alpha=0.5, label="Q1. Not duplicate")
+    plt.hist(diff[:, 1], bins, alpha=0.5, label="Q2. Not duplicate")
+    plt.legend(loc='upper right')
+    plt.savefig('../Visualization/' + save_title)
+    plt.show()
+
+# glove = load_glove("../Data/glove.6B.50d.txt")
+# # np.save("../Data/glove50d", glove)
+glove = np.load("../Data/glove50d.npy").item()
+# vector_distance("Vector distance", "vec_dist", glove, 'euclidean')
+not_found_in_glove(glove, "Not found in GloVe", "not_found")
 
 
-# common_words("Common words with stopwords", False, False)
-# common_words("Common words without stopwords", "cmn_words_with_stop", False, True)
-
-glove = load_glove("../Data/glove.6B.50d.txt")
-np.save("../Data/glove50d", glove)
-# glove = np.load("../Data/glove50d.npy").item()
-vector_distance("Vector distance", "vec_dist", glove, 'euclidean')
-# same = np.load("vec_dist_same.npy")
-# diff = np.load("vec_dist_diff.npy")
-# bins = np.linspace(0, 3, 100)
-# plt.title("Vec diff")
-# plt.hist(same, bins, alpha=0.5, label="is_duplicate=1")
-# plt.hist(diff, bins, alpha=0.5, label="is_duplicate=0")
-# plt.legend(loc='upper right')
-# plt.savefig('../Visualization/vec_dist')
-# plt.show()

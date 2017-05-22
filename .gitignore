@@ -3,3 +3,5 @@ test*
 train*
 Other
 Data/*
+.idea/*
+Scripts/__*

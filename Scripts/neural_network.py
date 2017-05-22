@@ -19,17 +19,15 @@ x_train = np.nan_to_num(x_train)
 y_train = np.nan_to_num(y_train)
 x_test = np.nan_to_num(x_test)
 
-#Hyperparameters
+# Hyperparameters
 n_features = len(x_train[0])
-epochs = 20
-batch_size = 1000
-dropout_rate = 0.5 #Helps preventing overfitting
+epochs = 30
+batch_size = 1024
+dropout_rate = 0.4 # Helps preventing overfitting
 n_neurons = 2000
 n_hidden_layers = 2
 shuffle = True
 train = True
-test = False
-
 
 model = None
 if train:
@@ -45,7 +43,7 @@ if train:
         model.add(Dropout(dropout_rate))
     model.add(Dense(1, activation='sigmoid'))
 
-    model.compile(lr=0.0001, loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(lr=0.01, loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     #Train the model
     model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=1, shuffle=shuffle)
@@ -57,7 +55,7 @@ if train:
     model.save_weights("Feed-Forward_Model.h5")
     print("Saved model to disk")
 
-if test:
+if not train:
     #Load pre-trained model
     print("Loading pre-trained model...")
     json_file = open("Feed-Forward_Model.json", 'r')

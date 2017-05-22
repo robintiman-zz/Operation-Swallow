@@ -9,19 +9,19 @@ import LSTM_vectorizer as LSTM_vec
 dim = 50
 
 # GloVe
-glove = lf.load_glove("../Data/glove.6B.50d.txt")
+# glove = lf.load_glove("../Data/glove.6B.50d.txt")
+# np.save("../Data/glove50d", glove)
+glove = np.load("../Data/glove50d.npy").item()
 
 # Training set
 traindata = pd.read_csv('../Data/train.csv')
 traindata = traindata.replace(np.nan, '', regex=True)
-#vec.vectorize(dim, glove, traindata, is_train=True)        #Ordinary vectorizing
-LSTM_vec.vectorize(dim, glove, traindata, is_train=True)   #LSTM vectorizing, takes up a lot of ram and disk!
+vec.vectorize(dim, glove, traindata, is_train=True)        #Ordinary vectorizing
 
 # Test set
-#testdata = pd.read_csv('../Data/test.csv')
-#testdata = testdata.replace(np.nan, '', regex=True)
-#vec.vectorize(dim, glove, testdata, is_train=False)        #Ordinary vectorizing
-#LSTM_vec.vectorize(dim, glove, testdata, is_train=False)    #LSTM vectorizing, takes up a lot of ram and disk!
+# testdata = pd.read_csv('../Data/test.csv')
+# testdata = testdata.replace(np.nan, '', regex=True)
+# vec.vectorize(dim, glove, testdata, is_train=False)        #Ordinary vectorizing
 
 #
 # # Load np files if already vectorized
