@@ -19,9 +19,9 @@ traindata = traindata.replace(np.nan, '', regex=True)
 vec.vectorize(dim, glove, traindata, is_train=True)        #Ordinary vectorizing
 
 # Test set
-# testdata = pd.read_csv('../Data/test.csv')
-# testdata = testdata.replace(np.nan, '', regex=True)
-# vec.vectorize(dim, glove, testdata, is_train=False)        #Ordinary vectorizing
+testdata = pd.read_csv('../Data/test.csv')
+testdata = testdata.replace(np.nan, '', regex=True)
+vec.vectorize(dim, glove, testdata, is_train=False)        #Ordinary vectorizing
 
 #
 # # Load np files if already vectorized
